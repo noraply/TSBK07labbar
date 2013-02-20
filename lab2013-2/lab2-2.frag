@@ -1,0 +1,17 @@
+#version 150
+
+in vec3 ex_Normal;
+in vec2 ex_TexCoord;
+
+in vec4 ex_colour;
+
+out vec4 out_Color;
+
+uniform sampler2D texunit;
+
+void main(void)
+{
+//	float a = sin(ex_TexCoord.s*20);
+//	float b = cos(ex_TexCoord.s*20);
+	out_Color = texture(texunit, ex_TexCoord*0.1);//vec4(ex_colour);
+}
