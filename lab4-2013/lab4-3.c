@@ -27,12 +27,13 @@ void calculate_normal_tri(Point3D *coord, int x, int z, int width, Point3D *norm
 
 	// Calculate the "second vector"
 	VectorSub(&coord[x + z*width], &coord[x + (z - 1)*width], &tmp1);
-	VectorSub(&coord[x-1 + z*width], &coord[x + (z-1)*width], &tmp2);
-	CrossProduct(&tmp1, &tmp2, &norm_array[x*width + z]);
+	VectorSub(&coord[x-1 + z*width], &coord[x + z*width], &tmp2);
+	CrossProduct(&tmp1, &tmp2, &norm_array[x + z*width]);
 	
 	// Calculate the "first" vector
 	VectorSub(&coord[x-1 + (z-1)*width], &coord[x + (z-1)*width], &tmp1);
-	CrossProduct(&tmp1, &tmp2, &norm_array[x*width + z - 1]);
+	VectorSub(&coord[x - 1 + (z - 1)*width ], &coord[x - 1 + z*width], &tmp2);
+	CrossProduct(&tmp1, &tmp2, &norm_array[x + z*width - 1]);
 
 }
 
@@ -88,22 +89,23 @@ Model* GenerateTerrain(TextureData *tex)
 
 			// Calculate normals
 			if(x == 0 && z == 0){
-				tmp= triangle_normals[x + z*tex->width];
+				tmp = triangle_normals[0];
 			}else if(z == 0){
-				// Triangles to the left of the vertex
-				VectorAdd(&triangle_normals[(x - 1)*(tex->height -1)], &triangle_normals[(x - 1)*(tex->height -1) + 1], &tmp);
-				VectorAdd(&tmp, &triangle_normals[2*x*(tex->height -1)], &tmp);
+				// Triangles below the vertex
+				VectorAdd(&triangle_normals[2*x - 2], &triangle_normals[2*x -1], &tmp);
+				VectorAdd(&tmp, &triangle_normals[2*x], &tmp);
 			}else if(x == 0){
-				VectorAdd(&triangle_normals[2*z - 2], &triangle_normals[2 * z - 1], &tmp);
-				VectorAdd(&tmp, &triangle_normals[2*z], &tmp);
+				// Triangles to the right of the vertex
+				VectorAdd(&triangle_normals[(2*z - 1)*2*(tex->width -1)], &triangle_normals[(2*z - 1)*2*(tex->width -1) + 1], &tmp);
+				VectorAdd(&tmp, &triangle_normals[z*2*(tex->width - 1)], &tmp);
 			}else {
-				// Triangles to the left of the vertex
-				VectorAdd(&triangle_normals[(x - 1)*(tex->height -1) + 2*z - 1], &triangle_normals[(x - 1)*(tex->height -1) + 2*z - 1 + 1], &tmp);
-				VectorAdd(&tmp, &triangle_normals[(x - 1)*(tex->height -1) + 2*z - 1 + 2], &tmp);
-				// triangles to the right of the vertex
-				VectorAdd(&tmp, &triangle_normals[2*x*(tex->height - 1) + 2*(z - 1)], &tmp);
-				VectorAdd(&tmp, &triangle_normals[2*x*(tex->height - 1) + 2*(z - 1) + 1], &tmp);
-				VectorAdd(&tmp, &triangle_normals[2*x*(tex->height - 1) + 2*(z - 1) + 2], &tmp);
+				// Triangles above the vertex
+				VectorAdd(&triangle_normals[(z - 1)*2*(tex->width - 1) + (2*x - 1)], &triangle_normals[(z - 1)*2*(tex->width - 1) + (2*x - 1) + 1], &tmp);
+				VectorAdd(&tmp, &triangle_normals[(z - 1)*2*(tex->width - 1) + (2*x - 1) + 2], &tmp);
+				// triangles below the vertex
+				VectorAdd(&tmp, &triangle_normals[2*z*(tex->width -1) + (2*x -2)], &tmp);
+				VectorAdd(&tmp, &triangle_normals[2*z*(tex->width -1) + (2*x -1)], &tmp);
+				VectorAdd(&tmp, &triangle_normals[2*z*(tex->width -1) + 2*x], &tmp);
 			}
 
 /*			else if(x == tex->width -1 && z == 0){
@@ -116,9 +118,12 @@ Model* GenerateTerrain(TextureData *tex)
 								
 			} */
 			Normalize(&tmp);
-			normalArray[(2*x*(tex->height -1) + z)*3 + 0] = tmp.x;
-			normalArray[(2*x*(tex->height -1) + z)*3 + 1] = tmp.y;
-			normalArray[(2*x*(tex->height -1) + z)*3 + 2] = tmp.z;
+//			normalArray[(2*x*(tex->height -1) + z)*3 + 0] = tmp.x;
+//			normalArray[(2*x*(tex->height -1) + z)*3 + 1] = tmp.y;
+//			normalArray[(2*x*(tex->height -1) + z)*3 + 2] = tmp.z;
+			normalArray[(x + z * tex->width)*3 + 0] = tmp.x;
+			normalArray[(x + z * tex->width)*3 + 1] = tmp.y;
+			normalArray[(x + z * tex->width)*3 + 2] = tmp.z;
 
 		}
 	
@@ -170,7 +175,7 @@ void init(void)
 	
 // Load terrain data
 	
-	LoadTGATexture("fft-terrain.tga", &ttex);
+	LoadTGATexture("44-terrain.tga", &ttex);
 	tm = GenerateTerrain(&ttex);
 	printError("init terrain");
 }
