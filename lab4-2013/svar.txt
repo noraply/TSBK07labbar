@@ -1,0 +1,5 @@
+1. Höjdnivå för varje enskilt fragment. Troligtvis mellan 0 och 255.
+2. Består av 18 polygoner (9*2), men det ritas, för tillfället, bara 10.
+
+
+
