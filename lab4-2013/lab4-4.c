@@ -11,14 +11,19 @@
 #include "loadobj.h"
 #include "LoadTGA2.h"
 
+#define CAM_HEIGHT 3
 GLfloat projectionMatrix[16];
 
 GLfloat rot[16], trans[16], total[16], camMatrix[16], cam_mod[16];
 GLfloat t = 0;
 GLfloat i = 0;
-Point3D cam = {0, 5, 8};
+Point3D cam = {0, 5, 0};
 Point3D lookAtPoint = {2, 0, 2};
 Point3D up;
+
+Model *sphere;
+
+int terrain_height, terrain_width;
 
 void calculate_normals( int x, int z, int width, int height, GLfloat *vertex_arr, GLfloat **norm_arr)
 {
@@ -393,6 +398,9 @@ Model* GenerateTerrain(TextureData *tex)
 	int vertexCount = tex->width * tex->height;
 	int triangleCount = (tex->width-1) * (tex->height-1) * 2;
 	int x, z;
+
+    terrain_height = tex->height;
+    terrain_width = tex->width;
 	
 	GLfloat *vertexArray = malloc(sizeof(GLfloat) * 3 * vertexCount);
 	GLfloat *normalArray = malloc(sizeof(GLfloat) * 3 * vertexCount);
@@ -417,9 +425,6 @@ Model* GenerateTerrain(TextureData *tex)
 			texCoordArray[(x + z * tex->width)*2 + 0] = x; // (float)x / tex->width;
 			texCoordArray[(x + z * tex->width)*2 + 1] = z; // (float)z / tex->height;
 		}
-    printf("Normal Vector 1 is (%f, %f, %f)\n", normalArray[((tex->width -2) + (tex->height -1)*tex->height)*3 + 0],normalArray[((tex->width -2) + (tex->height -1)*tex->height)*3 + 1], normalArray[((tex->width -2) + (tex->height -1)*tex->height)*3 + 2]);
-    printf("Normal Vector 2 is (%f, %f, %f)\n", normalArray[((tex->width -1) + (tex->height -1)*tex->height)*3 + 0],normalArray[((tex->width -1) + (tex->height -1)*tex->height)*3 + 1], normalArray[((tex->width -1) + (tex->height -1)*tex->height)*3 + 2]);
-    printf("Normal Vector 3 is (%f, %f, %f)\n", normalArray[((tex->width -1) + (tex->height -2)*tex->height)*3 + 0],normalArray[((tex->width -1) + (tex->height -2)*tex->height)*3 + 1], normalArray[((tex->width -1) + (tex->height -2)*tex->height)*3 + 2]);
 	for (x = 0; x < tex->width-1; x++)
 		for (z = 0; z < tex->height-1; z++)
 		{
@@ -462,13 +467,14 @@ TextureData ttex; // terrain
 
 void init(void)
 {
+
 	// GL inits
 	glClearColor(0.2,0.2,0.5,0);
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	printError("GL inits");
 
-	frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 50.0, projectionMatrix);
+	frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 500.0, projectionMatrix);
 
 	// Load and compile shader
 	program = loadShaders("terrain.vert", "terrain.frag");
@@ -481,9 +487,11 @@ void init(void)
 	
 // Load terrain data
 	
-	LoadTGATexture("44-terrain.tga", &ttex);
+	LoadTGATexture("fft-terrain.tga", &ttex);
 	tm = GenerateTerrain(&ttex);
 	printError("init terrain");
+
+    sphere = LoadModelPlus("groundsphere.obj");
 }
 
 void check_keyboard()
@@ -552,6 +560,63 @@ void check_keyboard()
     lookAtPoint.y -= up.y*0.5;
   }
 }
+int find_quad(Model *ground, Point3D pos)
+{
+    int x = floor(pos.x);
+    int z = floor(pos.z);
+    return x + z*terrain_width; 
+}
+
+int find_triangle(Model *ground, Point3D pos)
+{
+    int x = floor(pos.x);
+    int z = floor(pos.z);
+    int diff = (pos.x - x + pos.z - z);
+
+    /* Upper triangle */
+    if(diff >= 1){
+        return 1;
+    }else{
+        return 0;
+    }
+}
+
+float calculate_height(Model *ground, Point3D pos)
+{
+    int quad = find_quad(ground, pos);
+    int upper = find_triangle(ground, pos);
+    int A,B,C,D;
+    Point3D pt1, pt2, pt3, vec1, vec2, normal;
+
+    pt1.x = ground->vertexArray[quad + terrain_width*3];
+    pt1.y = ground->vertexArray[quad + terrain_width*3 + 1];
+    pt1.z = ground->vertexArray[quad + terrain_width*3 + 2];
+
+    pt3.x = ground->vertexArray[quad + 3];
+    pt3.y = ground->vertexArray[quad + 3 + 1];
+    pt3.z = ground->vertexArray[quad + 3 + 2];
+
+    if(upper){
+        pt2.x = -ground->vertexArray[quad + (1 + terrain_width)*3];
+        pt2.y = -ground->vertexArray[quad + (1 + terrain_width)*3 + 1];
+        pt2.z = -ground->vertexArray[quad + (1 + terrain_width)*3 + 2];
+    }else{
+        pt2.x = ground->vertexArray[quad];
+        pt2.y = ground->vertexArray[quad + 1];
+        pt2.z = ground->vertexArray[quad + 2];
+    }
+
+    VectorSub(&pt2, &pt1, &vec1);
+    VectorSub(&pt3, &pt1, &vec2);
+
+    CrossProduct(&vec1, &vec2, &normal);
+    A = normal.x;
+    B = normal.y;
+    C = normal.z;
+    D = A*pt1.x + B*pt1.y + C*pt1.z;
+
+    return (D - A*pos.x - C*pos.z)/ B;
+}
 void display(void)
 {
 
@@ -559,7 +624,7 @@ void display(void)
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	GLfloat total[16], modelView[16];
+	GLfloat total[16], modelView[16], trans[16], rot[16];
 	
 	printError("pre display");
 	
@@ -567,6 +632,7 @@ void display(void)
 
 	// Build matrix
 	
+//    cam.y = CAM_HEIGHT + calculate_height(tm, cam);
 	lookAt(&cam,
 				&lookAtPoint,
 				0, 1, 0,
@@ -574,10 +640,21 @@ void display(void)
 	IdentityMatrix(modelView);
 	Mult(camMatrix, modelView, total);
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total);
-	
+
 	glBindTexture(GL_TEXTURE_2D, tex1);		// Bind Our Texture tex1
 	DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
 
+    IdentityMatrix(rot);
+//    rot[0] = 6;
+//    rot[5] = 6;
+//    rot[10] = 6;
+
+    T(2, 5, 2, trans);
+    Mult(trans, rot, total);
+	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total);
+
+    
+    DrawModel(sphere, program, "inPosition", "inNormal", "inTexCoord");
 	printError("display 2");
 	
 	glutSwapBuffers();
