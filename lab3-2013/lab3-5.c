@@ -298,9 +298,10 @@ void check_keyboard()
     i = 3; // Sluta rita med textures
     glUniform1i(glGetUniformLocation(program, "i"), i);
     i = 0; // Använd i som en räknare igen...
+    
     // vingarna
     T(wing_x, wing_y, wing_z, trans);
-    Ry(M_PI/12, total);
+    Ry(M_PI/24, total);
     Rx(t / 2, rot);
 
     Mult(rot, total, total);
@@ -311,8 +312,7 @@ void check_keyboard()
     DrawModel(wings, program,"in_Position","in_Normal", NULL);
 
     T(wing_x, wing_y, wing_z, trans);
-    Ry(M_PI/12, total);
-    Rz(0, total);
+    Ry(M_PI/24, total);
     Rx(M_PI/2 + t / 2, rot);
 
     Mult(rot, total, total);
@@ -323,7 +323,7 @@ void check_keyboard()
     DrawModel(wings, program,"in_Position","in_Normal", NULL);
   
     T(wing_x, wing_y, wing_z, trans);
-    Ry(M_PI/12, total);
+    Ry(M_PI/24, total);
     Rx(M_PI +  t / 2, rot);
 
     Mult(rot, total, total);
@@ -334,7 +334,7 @@ void check_keyboard()
     DrawModel(wings, program,"in_Position","in_Normal", NULL);
   
     T(wing_x, wing_y, wing_z, trans);
-    Ry(M_PI/12, total);
+    Ry(M_PI/24, total);
     Rx(3*M_PI/2 + t / 2, rot);
 
     Mult(rot, total, total);

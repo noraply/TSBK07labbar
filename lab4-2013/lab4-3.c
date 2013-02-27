@@ -20,21 +20,386 @@ Point3D cam = {0, 5, 8};
 Point3D lookAtPoint = {2, 0, 2};
 Point3D up;
 
-void calculate_normal_tri(Point3D *coord, int x, int z, int width, Point3D *norm_array)
+void calculate_normals( int x, int z, int width, int height, GLfloat *vertex_arr, GLfloat **norm_arr)
 {
-	Point3D tmp1; 
-	Point3D tmp2;
+    Point3D res, temp_res;
+    Point3D tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+    Point3D vec1, vec2, vec3, vec4, vec5, vec6;
+    
+    GLfloat *normals = *norm_arr;
+    /* Fall 1 */
+    if(x == 1 && z == 1){
+        printf("Fall 1\n");
+        tmp3.x = vertex_arr[(x + (z-1)*width)*3 + 0];
+        tmp3.y = vertex_arr[(x + (z-1)*width)*3 + 1];
+        tmp3.z = vertex_arr[(x + (z-1)*width)*3 + 2];
 
-	// Calculate the "second vector"
-	VectorSub(&coord[x + z*width], &coord[x + (z - 1)*width], &tmp1);
-	VectorSub(&coord[x-1 + z*width], &coord[x + z*width], &tmp2);
-	CrossProduct(&tmp1, &tmp2, &norm_array[x + z*width]);
-	
-	// Calculate the "first" vector
-	VectorSub(&coord[x-1 + (z-1)*width], &coord[x + (z-1)*width], &tmp1);
-	VectorSub(&coord[x - 1 + (z - 1)*width ], &coord[x - 1 + z*width], &tmp2);
-	CrossProduct(&tmp1, &tmp2, &norm_array[x + z*width - 1]);
+        tmp2.x = vertex_arr[((x-1) + (z-1)*width)*3 + 0];
+        tmp2.y = vertex_arr[((x-1) + (z-1)*width)*3 + 1];
+        tmp2.z = vertex_arr[((x-1) + (z-1)*width)*3 + 2];
+        
+        tmp1.x = vertex_arr[((x-1) + z*width)*3 + 0];
+        tmp1.y = vertex_arr[((x-1) + z*width)*3 + 1];
+        tmp1.z = vertex_arr[((x-1) + z*width)*3 + 2];
 
+        VectorSub(&tmp1, &tmp2, &vec1);
+        VectorSub(&tmp3, &tmp2, &vec2);
+
+        CrossProduct(&vec1, &vec2, &res);
+
+        Normalize(&res);
+        normals[((x-1) + (z-1)*width)*3 + 0] = res.x;
+        normals[((x-1) + (z-1)*width)*3 + 1] = res.y;
+        normals[((x-1) + (z-1)*width)*3 + 2] = res.z;
+
+
+    /* Fall 2 */
+    }
+    if(z == 0 && x > 1){
+        printf("Fall 2\n");
+        tmp1.x = vertex_arr[((x-2) + z*width)*3 + 0];
+        tmp1.y = vertex_arr[((x-2) + z*width)*3 + 1];
+        tmp1.z = vertex_arr[((x-2) + z*width)*3 + 2];
+
+        tmp2.x = vertex_arr[((x - 1) + z*width)*3 + 0];
+        tmp2.y = vertex_arr[((x - 1) + z*width)*3 + 1];
+        tmp2.z = vertex_arr[((x - 1) + z*width)*3 + 2];
+        
+        tmp3.x = vertex_arr[((x-2) + (z + 1)*width)*3 + 0];
+        tmp3.y = vertex_arr[((x-2) + (z + 1)*width)*3 + 1];
+        tmp3.z = vertex_arr[((x-2) + (z + 1)*width)*3 + 2];
+
+        tmp4.x = vertex_arr[((x-1) + (z + 1)*width)*3 + 0];
+        tmp4.y = vertex_arr[((x-1) + (z + 1)*width)*3 + 1];
+        tmp4.z = vertex_arr[((x-1) + (z + 1)*width)*3 + 2];
+        
+        tmp5.x = vertex_arr[(x + z*width)*3 + 0];
+        tmp5.y = vertex_arr[(x + z*width)*3 + 1];
+        tmp5.z = vertex_arr[(x + z*width)*3 + 2];
+
+        VectorSub(&tmp1, &tmp2, &vec1);
+        VectorSub(&tmp3, &tmp2, &vec2);
+        VectorSub(&tmp4, &tmp2, &vec3);
+        VectorSub(&tmp5, &tmp2, &vec4);
+
+        CrossProduct(&vec1, &vec2, &temp_res);
+        res = temp_res;
+
+        CrossProduct(&vec2, &vec3, &temp_res);
+        VectorAdd(&res, &temp_res, &res);
+        
+        CrossProduct(&vec3, &vec4, &temp_res);
+        VectorAdd(&res, &temp_res, &res);
+
+        Normalize(&res);
+
+        normals[((x-1) + z*width)*3 + 0] = res.x;
+        normals[((x-1) + z*width)*3 + 1] = res.y;
+        normals[((x-1) + z*width)*3 + 2] = res.z;
+    /* Fall 4 */
+    }
+    if(x == 1 && z == height -1){
+        printf("Fall 4\n");
+        tmp1.x = vertex_arr[(x + z*width)*3 + 0];
+        tmp1.y = vertex_arr[(x + z*width)*3 + 1];
+        tmp1.z = vertex_arr[(x + z*width)*3 + 2];
+
+        tmp2.x = vertex_arr[((x - 1) + z*width)*3 + 0];
+        tmp2.y = vertex_arr[((x - 1) + z*width)*3 + 1];
+        tmp2.z = vertex_arr[((x - 1) + z*width)*3 + 2];
+        
+        tmp3.x = vertex_arr[(x + (z - 1)*width)*3 + 0];
+        tmp3.y = vertex_arr[(x + (z - 1)*width)*3 + 1];
+        tmp3.z = vertex_arr[(x + (z - 1)*width)*3 + 2];
+
+        tmp4.x = vertex_arr[((x-1) + (z - 1)*width)*3 + 0];
+        tmp4.y = vertex_arr[((x-1) + (z - 1)*width)*3 + 1];
+        tmp4.z = vertex_arr[((x-1) + (z - 1)*width)*3 + 2];
+        
+        VectorSub(&tmp1, &tmp2, &vec1);
+        VectorSub(&tmp3, &tmp2, &vec2);
+        VectorSub(&tmp4, &tmp2, &vec3);
+
+        CrossProduct(&vec1, &vec2, &temp_res);
+        res = temp_res;
+
+        CrossProduct(&vec2, &vec3, &temp_res);
+        VectorAdd(&res, &temp_res, &res);
+        
+
+        Normalize(&res);
+
+        normals[((x-1) + z*width)*3 + 0] = res.x;
+        normals[((x-1) + z*width)*3 + 1] = res.y;
+        normals[((x-1) + z*width)*3 + 2] = res.z;
+
+    /* Fall 5 */
+    }
+    if(x == width - 1  && z == 1){
+        printf("Fall 5\n");
+        tmp4.x = vertex_arr[(x + z*width)*3 + 0];
+        tmp4.y = vertex_arr[(x + z*width)*3 + 1];
+        tmp4.z = vertex_arr[(x + z*width)*3 + 2];
+
+        tmp3.x = vertex_arr[((x - 1) + z*width)*3 + 0];
+        tmp3.y = vertex_arr[((x - 1) + z*width)*3 + 1];
+        tmp3.z = vertex_arr[((x - 1) + z*width)*3 + 2];
+        
+        tmp2.x = vertex_arr[(x + (z - 1)*width)*3 + 0];
+        tmp2.y = vertex_arr[(x + (z - 1)*width)*3 + 1];
+        tmp2.z = vertex_arr[(x + (z - 1)*width)*3 + 2];
+
+        tmp1.x = vertex_arr[((x - 1) + (z - 1)*width)*3 + 0];
+        tmp1.y = vertex_arr[((x - 1) + (z - 1)*width)*3 + 1];
+        tmp1.z = vertex_arr[((x - 1) + (z - 1)*width)*3 + 2];
+        
+        VectorSub(&tmp1, &tmp2, &vec1);
+        VectorSub(&tmp3, &tmp2, &vec2);
+        VectorSub(&tmp4, &tmp2, &vec3);
+
+        CrossProduct(&vec1, &vec2, &res);
+
+        CrossProduct(&vec2, &vec3, &temp_res);
+        VectorAdd(&res, &temp_res, &res);
+        
+
+        Normalize(&res);
+        printf("Normal Vector is (%f,%f,%f)\n", res.x, res.y, res.z);
+        printf("(x,z) =  (%i, %i)\n", x, z);
+
+        normals[(x + (z - 1)*width)*3 + 0] = res.x;
+        normals[(x + (z - 1)*width)*3 + 1] = res.y;
+        normals[(x + (z - 1)*width)*3 + 2] = res.z;
+
+    /* Fall 6 */
+    }
+    if( x ==  width -1 && z > 1){
+        printf("Fall 6\n");
+        tmp4.x = vertex_arr[((x-1) + z*width)*3 + 0];
+        tmp4.y = vertex_arr[((x-1) + z*width)*3 + 1];
+        tmp4.z = vertex_arr[((x-1) + z*width)*3 + 2];
+
+        tmp3.x = vertex_arr[((x - 1) + (z - 1)*width)*3 + 0];
+        tmp3.y = vertex_arr[((x - 1) + (z - 1)*width)*3 + 1];
+        tmp3.z = vertex_arr[((x - 1) + (z - 1)*width)*3 + 2];
+        
+        tmp2.x = vertex_arr[(x + (z - 1)*width)*3 + 0];
+        tmp2.y = vertex_arr[(x + (z - 1)*width)*3 + 1];
+        tmp2.z = vertex_arr[(x + (z - 1)*width)*3 + 2];
+
+        tmp1.x = vertex_arr[(x + (z - 2)*width)*3 + 0];
+        tmp1.y = vertex_arr[(x + (z - 2)*width)*3 + 1];
+        tmp1.z = vertex_arr[(x + (z - 2)*width)*3 + 2];
+        
+        tmp5.x = vertex_arr[(x + z*width)*3 + 0];
+        tmp5.y = vertex_arr[(x + z*width)*3 + 1];
+        tmp5.z = vertex_arr[(x + z*width)*3 + 2];
+        
+        VectorSub(&tmp1, &tmp2, &vec1);
+        VectorSub(&tmp3, &tmp2, &vec2);
+        VectorSub(&tmp4, &tmp2, &vec3);
+        VectorSub(&tmp5, &tmp2, &vec4);
+
+        CrossProduct(&vec1, &vec2, &temp_res);
+        res = temp_res;
+
+        CrossProduct(&vec2, &vec3, &temp_res);
+        VectorAdd(&res, &temp_res, &res);
+        
+        CrossProduct(&vec3, &vec4, &temp_res);
+        VectorAdd(&res, &temp_res, &res);
+
+        Normalize(&res);
+
+        printf("(x,z - 1) från (%i,%i)\n", x, z);
+        normals[(x + (z - 1)*width)*3 + 0] = res.x;
+        normals[(x + (z - 1)*width)*3 + 1] = res.y;
+        normals[(x + (z - 1)*width)*3 + 2] = res.z;
+
+    /* Fall 8 */
+    }
+    if(z == height -1 && x > 1){
+        printf("Fall 8\n");
+        tmp5.x = vertex_arr[((x-2) + z*width)*3 + 0];
+        tmp5.y = vertex_arr[((x-2) + z*width)*3 + 1];
+        tmp5.z = vertex_arr[((x-2) + z*width)*3 + 2];
+
+        tmp2.x = vertex_arr[((x - 1) + z*width)*3 + 0];
+        tmp2.y = vertex_arr[((x - 1) + z*width)*3 + 1];
+        tmp2.z = vertex_arr[((x - 1) + z*width)*3 + 2];
+        
+        tmp3.x = vertex_arr[(x + (z - 1)*width)*3 + 0];
+        tmp3.y = vertex_arr[(x + (z - 1)*width)*3 + 1];
+        tmp3.z = vertex_arr[(x + (z - 1)*width)*3 + 2];
+
+        tmp4.x = vertex_arr[((x-1) + (z - 1)*width)*3 + 0];
+        tmp4.y = vertex_arr[((x-1) + (z - 1)*width)*3 + 1];
+        tmp4.z = vertex_arr[((x-1) + (z - 1)*width)*3 + 2];
+        
+        tmp1.x = vertex_arr[(x + z*width)*3 + 0];
+        tmp1.y = vertex_arr[(x + z*width)*3 + 1];
+        tmp1.z = vertex_arr[(x + z*width)*3 + 2];
+
+        VectorSub(&tmp1, &tmp2, &vec1);
+        VectorSub(&tmp3, &tmp2, &vec2);
+        VectorSub(&tmp4, &tmp2, &vec3);
+        VectorSub(&tmp5, &tmp2, &vec4);
+
+        CrossProduct(&vec1, &vec2, &temp_res);
+        res = temp_res;
+
+        CrossProduct(&vec2, &vec3, &temp_res);
+        VectorAdd(&res, &temp_res, &res);
+        
+        CrossProduct(&vec3, &vec4, &temp_res);
+        VectorAdd(&res, &temp_res, &res);
+
+        Normalize(&res);
+
+        printf("(x - 1,z) från (%i,%i)\n", x, z);
+        normals[((x-1) + z*width)*3 + 0] = res.x;
+        normals[((x-1) + z*width)*3 + 1] = res.y;
+        normals[((x-1) + z*width)*3 + 2] = res.z;
+
+    }
+    
+/* Fall 3 */
+if(x == 1 && z > 1){
+        printf("Fall 3\n");
+        tmp1.x = vertex_arr[((x-1) + z*width)*3 + 0];
+        tmp1.y = vertex_arr[((x-1) + z*width)*3 + 1];
+        tmp1.z = vertex_arr[((x-1) + z*width)*3 + 2];
+
+        tmp2.x = vertex_arr[((x - 1) + (z - 1)*width)*3 + 0];
+        tmp2.y = vertex_arr[((x - 1) + (z - 1)*width)*3 + 1];
+        tmp2.z = vertex_arr[((x - 1) + (z - 1)*width)*3 + 2];
+        
+        tmp3.x = vertex_arr[(x + (z - 1)*width)*3 + 0];
+        tmp3.y = vertex_arr[(x + (z - 1)*width)*3 + 1];
+        tmp3.z = vertex_arr[(x + (z - 1)*width)*3 + 2];
+
+        tmp4.x = vertex_arr[(x + (z - 2)*width)*3 + 0];
+        tmp4.y = vertex_arr[(x + (z - 2)*width)*3 + 1];
+        tmp4.z = vertex_arr[(x + (z - 2)*width)*3 + 2];
+        
+        tmp5.x = vertex_arr[((x - 1) + (z - 2)*width)*3 + 0];
+        tmp5.y = vertex_arr[((x - 1) + (z - 2)*width)*3 + 1];
+        tmp5.z = vertex_arr[((x - 1) + (z - 2)*width)*3 + 2];
+        
+        VectorSub(&tmp1, &tmp2, &vec1);
+        VectorSub(&tmp3, &tmp2, &vec2);
+        VectorSub(&tmp4, &tmp2, &vec3);
+        VectorSub(&tmp5, &tmp2, &vec4);
+
+        CrossProduct(&vec1, &vec2, &temp_res);
+        res = temp_res;
+
+        CrossProduct(&vec2, &vec3, &temp_res);
+        VectorAdd(&res, &temp_res, &res);
+        
+        CrossProduct(&vec3, &vec4, &temp_res);
+        VectorAdd(&res, &temp_res, &res);
+
+        Normalize(&res);
+
+        normals[((x-1) + (z - 1)*width)*3 + 0] = res.x;
+        normals[((x-1) + (z - 1)*width)*3 + 1] = res.y;
+        normals[((x-1) + (z - 1)*width)*3 + 2] = res.z;
+}
+
+/* Fall 7 */
+if(x == width -1 && z == height -1){
+        printf("Fall 7\n");
+        tmp1.x = vertex_arr[(x + (z-1)*width)*3 + 0];
+        tmp1.y = vertex_arr[(x + (z-1)*width)*3 + 1];
+        tmp1.z = vertex_arr[(x + (z-1)*width)*3 + 2];
+
+        tmp3.x = vertex_arr[(x + z*width)*3 + 0];
+        tmp3.y = vertex_arr[(x + z*width)*3 + 1];
+        tmp3.z = vertex_arr[(x + z*width)*3 + 2];
+        
+        tmp2.x = vertex_arr[((x-1) + z*width)*3 + 0];
+        tmp2.y = vertex_arr[((x-1) + z*width)*3 + 1];
+        tmp2.z = vertex_arr[((x-1) + z*width)*3 + 2];
+
+        VectorSub(&tmp1, &tmp2, &vec1);
+        VectorSub(&tmp3, &tmp2, &vec2);
+
+        CrossProduct(&vec1, &vec2, &res);
+
+        Normalize(&res);
+        printf("(x,z) från (%i,%i)\n", x, z);
+        normals[(x + z*width)*3 + 0] = res.x;
+        normals[(x + z*width)*3 + 1] = res.y;
+        normals[(x + z*width)*3 + 2] = res.z;
+}
+
+/* Generella fallet */
+if(x > 1 && z > 1) {
+    printf("Fall generellt!\n");
+    tmp1.x = vertex_arr[((x-1) + z*width)*3 + 0];
+    tmp1.y = vertex_arr[((x-1) + z*width)*3 + 1];
+    tmp1.z = vertex_arr[((x-1) + z*width)*3 + 2];
+
+    tmp2.x = vertex_arr[((x - 1) + (z - 1)*width)*3 + 0];
+    tmp2.y = vertex_arr[((x - 1) + (z - 1)*width)*3 + 1];
+    tmp2.z = vertex_arr[((x - 1) + (z - 1)*width)*3 + 2];
+
+    tmp3.x = vertex_arr[(x + (z - 1)*width)*3 + 0];
+    tmp3.y = vertex_arr[(x + (z - 1)*width)*3 + 1];
+    tmp3.z = vertex_arr[(x + (z - 1)*width)*3 + 2];
+
+    tmp4.x = vertex_arr[(x + (z - 2)*width)*3 + 0];
+    tmp4.y = vertex_arr[(x + (z - 2)*width)*3 + 1];
+    tmp4.z = vertex_arr[(x + (z - 2)*width)*3 + 2];
+
+    tmp5.x = vertex_arr[((x - 1) + (z - 2)*width)*3 + 0];
+    tmp5.y = vertex_arr[((x - 1) + (z - 2)*width)*3 + 1];
+    tmp5.z = vertex_arr[((x - 1) + (z - 2)*width)*3 + 2];
+
+    tmp6.x = vertex_arr[((x - 2) + (z - 1)*width)*3 + 0];
+    tmp6.y = vertex_arr[((x - 2) + (z - 1)*width)*3 + 1];
+    tmp6.z = vertex_arr[((x - 2) + (z - 1)*width)*3 + 2];
+
+    tmp7.x = vertex_arr[((x - 2) + z*width)*3 + 0];
+    tmp7.y = vertex_arr[((x - 2) + z*width)*3 + 1];
+    tmp7.z = vertex_arr[((x - 2) + z*width)*3 + 2];
+
+
+    VectorSub(&tmp1, &tmp2, &vec1);
+    VectorSub(&tmp3, &tmp2, &vec2);
+    VectorSub(&tmp4, &tmp2, &vec3);
+    VectorSub(&tmp5, &tmp2, &vec4);
+    VectorSub(&tmp6, &tmp2, &vec5);
+    VectorSub(&tmp7, &tmp2, &vec6);
+
+    CrossProduct(&vec1, &vec2, &temp_res);
+    res = temp_res;
+
+    CrossProduct(&vec2, &vec3, &temp_res);
+    VectorAdd(&res, &temp_res, &res);
+
+    CrossProduct(&vec3, &vec4, &temp_res);
+    VectorAdd(&res, &temp_res, &res);
+
+    CrossProduct(&vec4, &vec5, &temp_res);
+    VectorAdd(&res, &temp_res, &res);
+
+    CrossProduct(&vec5, &vec6, &temp_res);
+    VectorAdd(&res, &temp_res, &res);
+
+    CrossProduct(&vec6, &vec1, &temp_res);
+    VectorAdd(&res, &temp_res, &res);
+
+    Normalize(&res);
+
+    printf("(x - 1,z - 1) från (%i,%i)\n", x, z);
+    normals[((x - 1) + (z - 1)*width)*3 + 0] = res.x;
+    normals[((x - 1) + (z - 1)*width)*3 + 1] = res.y;
+    normals[((x - 1) + (z - 1)*width)*3 + 2] = res.z;
+
+}
+    norm_arr = &normals;
 }
 
 Model* GenerateTerrain(TextureData *tex)
@@ -48,33 +413,23 @@ Model* GenerateTerrain(TextureData *tex)
 	GLfloat *texCoordArray = malloc(sizeof(GLfloat) * 2 * vertexCount);
 	GLuint *indexArray = malloc(sizeof(GLuint) * triangleCount*3);
 
-	Point3D *vertex_coordinates = malloc(sizeof(Point3D)*3 * vertexCount);
-	Point3D *triangle_normals = malloc(sizeof(Point3D) * triangleCount);
-	
+
 	printf("bpp %d\n", tex->bpp);
 	for (x = 0; x < tex->width; x++)
 		for (z = 0; z < tex->height; z++)
-		{
+
+        {
 // Vertex array. You need to scale this properly
 			vertexArray[(x + z * tex->width)*3 + 0] = x / 1.0;
 			vertexArray[(x + z * tex->width)*3 + 1] = tex->imageData[(x + z * tex->width) * (tex->bpp/8)] / 10.0;
 			vertexArray[(x + z * tex->width)*3 + 2] = z / 1.0;
-			vertex_coordinates[(x + z*tex->width) + 0].x = x / 10;
-			vertex_coordinates[(x + z*tex->width) + 1].y =  tex->imageData[(x + z * tex->width) * (tex->bpp/8)] / 10.0;
-			vertex_coordinates[(x + z*tex->width) + 2].z = z / 1.0;
 // Normal vectors. You need to calculate these.
-			if(z > 0 && x > 0){
-				calculate_normal_tri(vertex_coordinates, x, z, tex->width, triangle_normals);
-			}
-				
-			normalArray[(x + z * tex->width)*3 + 0] = 0.0;
-			normalArray[(x + z * tex->width)*3 + 1] = 1.0;
-			normalArray[(x + z * tex->width)*3 + 2] = 0.0;
+            calculate_normals( x, z, tex->width, tex->height, vertexArray, &normalArray);
+
 // Texture coordinates. You may want to scale them.
 			texCoordArray[(x + z * tex->width)*2 + 0] = x; // (float)x / tex->width;
 			texCoordArray[(x + z * tex->width)*2 + 1] = z; // (float)z / tex->height;
 		}
-	Point3D tmp;
 	for (x = 0; x < tex->width-1; x++)
 		for (z = 0; z < tex->height-1; z++)
 		{
@@ -86,45 +441,6 @@ Model* GenerateTerrain(TextureData *tex)
 			indexArray[(x + z * (tex->width-1))*6 + 3] = x+1 + z * tex->width;
 			indexArray[(x + z * (tex->width-1))*6 + 4] = x + (z+1) * tex->width;
 			indexArray[(x + z * (tex->width-1))*6 + 5] = x+1 + (z+1) * tex->width;
-
-			// Calculate normals
-			if(x == 0 && z == 0){
-				tmp = triangle_normals[0];
-			}else if(z == 0){
-				// Triangles below the vertex
-				VectorAdd(&triangle_normals[2*x - 2], &triangle_normals[2*x -1], &tmp);
-				VectorAdd(&tmp, &triangle_normals[2*x], &tmp);
-			}else if(x == 0){
-				// Triangles to the right of the vertex
-				VectorAdd(&triangle_normals[(2*z - 1)*2*(tex->width -1)], &triangle_normals[(2*z - 1)*2*(tex->width -1) + 1], &tmp);
-				VectorAdd(&tmp, &triangle_normals[z*2*(tex->width - 1)], &tmp);
-			}else {
-				// Triangles above the vertex
-				VectorAdd(&triangle_normals[(z - 1)*2*(tex->width - 1) + (2*x - 1)], &triangle_normals[(z - 1)*2*(tex->width - 1) + (2*x - 1) + 1], &tmp);
-				VectorAdd(&tmp, &triangle_normals[(z - 1)*2*(tex->width - 1) + (2*x - 1) + 2], &tmp);
-				// triangles below the vertex
-				VectorAdd(&tmp, &triangle_normals[2*z*(tex->width -1) + (2*x -2)], &tmp);
-				VectorAdd(&tmp, &triangle_normals[2*z*(tex->width -1) + (2*x -1)], &tmp);
-				VectorAdd(&tmp, &triangle_normals[2*z*(tex->width -1) + 2*x], &tmp);
-			}
-
-/*			else if(x == tex->width -1 && z == 0){
-				VectorAdd(&triangle_normals[2(x -1)*(tex->height - 1) + z*tex->width], &triangle_normals[2(x - 1)*(tex->height -1) + z*tex->width + 1], &tmp);
-			}else if(x == 0 && z == tex->height -1){
-				VectorAdd(&triangle_normals[z * 2], &triangle_normals[z *2 +1], &tmp);
-			}else if(x ==  tex->width -1 && z == tex->height -1){
-				tmp = triangle_normals[2*x*z];
-			}else if(z == 0){
-								
-			} */
-			Normalize(&tmp);
-//			normalArray[(2*x*(tex->height -1) + z)*3 + 0] = tmp.x;
-//			normalArray[(2*x*(tex->height -1) + z)*3 + 1] = tmp.y;
-//			normalArray[(2*x*(tex->height -1) + z)*3 + 2] = tmp.z;
-			normalArray[(x + z * tex->width)*3 + 0] = tmp.x;
-			normalArray[(x + z * tex->width)*3 + 1] = tmp.y;
-			normalArray[(x + z * tex->width)*3 + 2] = tmp.z;
-
 		}
 	
 	// End of terrain generation
@@ -139,9 +455,9 @@ Model* GenerateTerrain(TextureData *tex)
 			indexArray,
 			vertexCount,
 			triangleCount*3);
-	
-	free(vertex_coordinates);
-	free(triangle_normals);
+    free(vertexArray);
+    free(indexArray);
+    free(normalArray);
 
 	return model;
 }
@@ -162,7 +478,7 @@ void init(void)
 	glDisable(GL_CULL_FACE);
 	printError("GL inits");
 
-	frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 500.0, projectionMatrix);
+	frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 50.0, projectionMatrix);
 
 	// Load and compile shader
 	program = loadShaders("terrain.vert", "terrain.frag");
@@ -175,7 +491,7 @@ void init(void)
 	
 // Load terrain data
 	
-	LoadTGATexture("44-terrain.tga", &ttex);
+	LoadTGATexture("fft-terrain.tga", &ttex);
 	tm = GenerateTerrain(&ttex);
 	printError("init terrain");
 }
@@ -229,11 +545,11 @@ void check_keyboard()
     lookAtPoint.z += right.z;
   } else if(keyIsDown('u')){
     cam.x = 0;
-    cam.y = 5;
-    cam.z = 8;
-    lookAtPoint.z = 2;
+    cam.y = 2;
+    cam.z = 0;
+    lookAtPoint.z = 0;
     lookAtPoint.x = 0;
-    lookAtPoint.y = 2;
+    lookAtPoint.y = 0;
   } else if(keyIsDown('j')){
     lookAtPoint.x -= 2*right.x;
     lookAtPoint.z -= 2*right.z;

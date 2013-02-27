@@ -94,6 +94,7 @@ void init(void)
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, skybox_tex);
 
+
   if(walls == NULL || wings == NULL ){
     fprintf(stderr, "Failed to load object\n");
   }
@@ -114,7 +115,7 @@ void init(void)
   printError("GL inits");
 
   // Load and compile shader
-  program = loadShaders("lab3-4.vert", "lab3-4.frag");
+  program = loadShaders("lab3-5.vert", "lab3-5.frag");
   printError("init shader");
 	
   glUniformMatrix4fv(glGetUniformLocation(program, "projectionMatrix"), 1, GL_TRUE, projectionMatrix);
@@ -189,7 +190,8 @@ void check_keyboard()
     lookAt(&cam_pos, &lookAt_pos, up[0],up[1],up[2], cam);
     
     for(int i = 0; i < 16; i++){
-      if(i != 3 && i != 7 && i != 11){
+
+        if(i != 3 && i != 7 && i != 11){
 	cam_mod[i] = cam[i];
       }else{
 	cam_mod[i] = 0;
@@ -207,7 +209,8 @@ void check_keyboard()
 
     glDisable(GL_DEPTH_TEST);
     // glDisable(GL_CULL_FACE);
-    glUniform1i(glGetUniformLocation(program, "texUnit"), 1); // Texture unit 1 
+    glUniform1i(glGetUniformLocation(program, "skyTex"), 1); // Texture unit 1 
+//    glUniform1i(glGetUniformLocation(program, "texUnit"), 1); // Texture unit 1 
     DrawModel(skybox, program, "in_Position", "in_Normal", "in_TexCoord");
     //glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
@@ -215,12 +218,16 @@ void check_keyboard()
     glUniformMatrix4fv(glGetUniformLocation(program, "CameraMatrix"), 1, GL_TRUE, cam); 	    
     
     // Marken
-    glUniform1i(glGetUniformLocation(program, "texUnit"), 0); // Texture unit 0
-    
+    i = 1;
+    glUniform1i(glGetUniformLocation(program, "i"), i);
+    glUniform1i(glGetUniformLocation(program, "grassTex"), 0); // Texture unit 0
+   
     T(0.0, -7.0, -.0f, total);
     glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total);
 
-    
+    i = 2;
+    glUniform1i(glGetUniformLocation(program, "i"), i);
+   
 
     unsigned int groundBufferObjID;
     unsigned int groundTexCoordBufferObjID;
@@ -262,7 +269,7 @@ void check_keyboard()
 
     
 
-    i = 1; // Sluta rita med textures
+    i = 2; // Sluta rita med textures
     glUniform1i(glGetUniformLocation(program, "i"), i);
     i = 0; // Använd i som en räknare igen...
     // vingarna
