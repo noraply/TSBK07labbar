@@ -17,13 +17,15 @@ GLfloat projectionMatrix[16];
 GLfloat rot[16], trans[16], total[16], camMatrix[16], cam_mod[16];
 GLfloat t = 0;
 GLfloat i = 0;
-Point3D cam = {0, 5, 0};
+Point3D cam = {0, 3, 0};
 Point3D lookAtPoint = {2, 0, 2};
 Point3D up;
 
 Model *sphere;
 
 int terrain_height, terrain_width;
+
+float calculate_height(Model *ground, Point3D pos);
 
 void calculate_normals( int x, int z, int width, int height, GLfloat *vertex_arr, GLfloat **norm_arr)
 {
@@ -412,11 +414,11 @@ Model* GenerateTerrain(TextureData *tex)
 	for (x = 0; x < tex->width; x++)
 		for (z = 0; z < tex->height; z++)
 
+
         {
 // Vertex array. You need to scale this properly
 			vertexArray[(x + z * tex->width)*3 + 0] = x / 1.0;
 			vertexArray[(x + z * tex->width)*3 + 1] = tex->imageData[(x + z * tex->width) * (tex->bpp/8)] / 10.0;
-			vertexArray[(x + z * tex->width)*3 + 1] = 0;
 			vertexArray[(x + z * tex->width)*3 + 2] = z / 1.0;
 // Normal vectors. You need to calculate these.
             calculate_normals( x, z, tex->width, tex->height, vertexArray, &normalArray);
@@ -427,7 +429,8 @@ Model* GenerateTerrain(TextureData *tex)
 		}
 	for (x = 0; x < tex->width-1; x++)
 		for (z = 0; z < tex->height-1; z++)
-		{
+
+        {
 		// Triangle 1
 			indexArray[(x + z * (tex->width-1))*6 + 0] = x + z * tex->width;
 			indexArray[(x + z * (tex->width-1))*6 + 1] = x + (z+1) * tex->width;
@@ -542,9 +545,9 @@ void check_keyboard()
     lookAtPoint.x += right.x;
     lookAtPoint.z += right.z;
   } else if(keyIsDown('u')){
-    cam.x = 0;
-    cam.y = 2;
-    cam.z = 0;
+    cam.x = 0.0;
+    cam.y = 2.0;
+    cam.z = 0.0;
     lookAtPoint.z = 0;
     lookAtPoint.x = 0;
     lookAtPoint.y = 0;
@@ -558,13 +561,16 @@ void check_keyboard()
     lookAtPoint.y +=  up.y*0.5;
   } else if(keyIsDown('k')){
     lookAtPoint.y -= up.y*0.5;
+  }else if(keyIsDown('c')){
+    printf("(x,y,z) = (%f,%f,%f)\n", cam.x, calculate_height(tm, cam), cam.z);
   }
 }
 int find_quad(Model *ground, Point3D pos)
 {
     int x = floor(pos.x);
     int z = floor(pos.z);
-    return x + z*terrain_width; 
+
+    return (x + z*terrain_width)*3;
 }
 
 int find_triangle(Model *ground, Point3D pos)
@@ -585,25 +591,27 @@ float calculate_height(Model *ground, Point3D pos)
 {
     int quad = find_quad(ground, pos);
     int upper = find_triangle(ground, pos);
-    int A,B,C,D;
+
+    GLfloat A,B,C,D;
     Point3D pt1, pt2, pt3, vec1, vec2, normal;
 
-    pt1.x = ground->vertexArray[quad + terrain_width*3];
-    pt1.y = ground->vertexArray[quad + terrain_width*3 + 1];
-    pt1.z = ground->vertexArray[quad + terrain_width*3 + 2];
+    pt1.x = ground->vertexArray[quad + 0];
+    pt1.y = ground->vertexArray[quad + 1];
+    pt1.z = ground->vertexArray[quad + 2];
 
-    pt3.x = ground->vertexArray[quad + 3];
-    pt3.y = ground->vertexArray[quad + 3 + 1];
-    pt3.z = ground->vertexArray[quad + 3 + 2];
+
+    pt3.x = ground->vertexArray[quad + (1 + terrain_width)*3];
+    pt3.y = ground->vertexArray[quad + (1 + terrain_width)*3 + 1];
+    pt3.z = ground->vertexArray[quad + (1 + terrain_width)*3 + 2];
 
     if(upper){
-        pt2.x = -ground->vertexArray[quad + (1 + terrain_width)*3];
-        pt2.y = -ground->vertexArray[quad + (1 + terrain_width)*3 + 1];
-        pt2.z = -ground->vertexArray[quad + (1 + terrain_width)*3 + 2];
+      pt2.x = ground->vertexArray[quad + terrain_width*3];
+      pt2.y = ground->vertexArray[quad + terrain_width*3 + 1];
+      pt2.z = ground->vertexArray[quad + terrain_width*3 + 2];
     }else{
-        pt2.x = ground->vertexArray[quad];
-        pt2.y = ground->vertexArray[quad + 1];
-        pt2.z = ground->vertexArray[quad + 2];
+      pt2.x = ground->vertexArray[quad + 3];
+      pt2.y = ground->vertexArray[quad + 3 + 1];
+      pt2.z = ground->vertexArray[quad + 3 + 2];
     }
 
     VectorSub(&pt2, &pt1, &vec1);
@@ -615,8 +623,11 @@ float calculate_height(Model *ground, Point3D pos)
     C = normal.z;
     D = A*pt1.x + B*pt1.y + C*pt1.z;
 
-    return (D - A*pos.x - C*pos.z)/ B;
+    GLfloat res = (D - A*pos.x - C*pos.z)/ B;
+
+    return res;
 }
+
 void display(void)
 {
 
@@ -632,7 +643,7 @@ void display(void)
 
 	// Build matrix
 	
-//    cam.y = CAM_HEIGHT + calculate_height(tm, cam);
+//  cam.y = CAM_HEIGHT + calculate_height(tm, cam);
 	lookAt(&cam,
 				&lookAtPoint,
 				0, 1, 0,
@@ -645,13 +656,16 @@ void display(void)
 	DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
 
     IdentityMatrix(rot);
-//    rot[0] = 6;
-//    rot[5] = 6;
-//    rot[10] = 6;
 
-    T(2, 5, 2, trans);
+    Point3D pos = { 65.0 + 18*cos(t), 25.5, 54.0 + 18*sin(t)};
+    pos.y = calculate_height(tm, pos);
+
+
+
+    T(pos.x, pos.y, pos.z, trans);
     Mult(trans, rot, total);
-	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total);
+    Mult(camMatrix, total, total);
+    glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total);
 
     
     DrawModel(sphere, program, "inPosition", "inNormal", "inTexCoord");
@@ -662,6 +676,7 @@ void display(void)
 
 void timer(int i)
 {
+    t += 0.02;
 	glutTimerFunc(20, &timer, i);
 	glutPostRedisplay();
 }
