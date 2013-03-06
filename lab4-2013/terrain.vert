@@ -9,11 +9,10 @@ out vec3 ex_Normal;
 // NY
 uniform mat4 projMatrix;
 uniform mat4 mdlMatrix;
-uniform mat4 camMatrix;
 
 void main(void)
 {
-	mat3 normalMatrix1 = mat3(projMatrix*mdlMatrix);
+	mat3 normalMatrix = mat3(projMatrix*mdlMatrix);
 	texCoord = inTexCoord;
 	gl_Position = projMatrix * mdlMatrix * vec4(inPosition, 1.0);
 

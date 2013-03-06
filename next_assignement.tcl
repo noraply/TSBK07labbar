@@ -1,5 +1,6 @@
 #!/usr/bin/tclsh
 
+# update the makefile if necessary
 proc fix_Makefile { lab assign } {
 
 if {![file exists makefile]} {
@@ -13,12 +14,17 @@ set text_data [read $data]
 set RE "lab$lab-[expr {$assign - 1}]$"
 regsub -line $RE $text_data "lab$lab-[expr {$assign - 1}] lab$lab-$assign" text_data
 
-set RE "^lab$lab-[expr {$assign}]\\s*:"
+set RE "\\n(lab$lab-[expr {$assign - 1}]\\s*:.*)\\nclean\\s*:"
 
+regexp $RE $text_data foo old_rule
+
+set RE "lab$lab-[expr {$assign -1}]"
+regsub -all $RE $old_rule "lab$lab-$assign" new_rule
+
+set RE "^lab$lab-[expr {$assign}]\\s*:.*"
 if {![regexp -line $RE $text_data]} {
-	set new_rule "lab$lab-$assign: lab$lab-$assign.c GL_utilities.c\n\tgcc -Wall -std=c99 -o lab$lab-$assign -lGL -lm -lglut -DGL_GLEXT_PROTOTYPES lab$lab-$assign.c GL_utilities.c"
 
-	regsub -line {^clean :$} $text_data "$new_rule\n\nclean :" text_data
+	regsub {\nclean :} $text_data "\n$new_rule\nclean :" text_data
 }
 
 set RE ",[expr {$assign - 1}]\}\$"
@@ -89,4 +95,3 @@ if {[file exists "lab$lab_nr-[expr {$assign_nr - 1}].frag"]} {
 
 fix_Makefile $lab_nr $assign_nr
 fix_code $lab_nr $assign_nr
-
